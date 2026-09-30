@@ -2168,7 +2168,8 @@
     .proof-track {
       display: flex;
       transition: transform .45s var(--ease);
-      will-change: transform
+      will-change: transform;
+      touch-action: pan-y
     }
 
     .proof-slide {
@@ -2178,7 +2179,9 @@
       height: 380px;
       display: flex;
       align-items: center;
-      justify-content: center
+      justify-content: center;
+      user-select: none;
+      -webkit-user-select: none
     }
 
     .proof-slide img {
@@ -2187,12 +2190,27 @@
       object-fit: contain;
       display: block;
       filter: brightness(.92);
-      transition: filter .3s ease
+      transition: filter .3s ease;
+      -webkit-user-drag: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none
     }
 
     .proof-slider:hover .proof-slide img {
       filter: brightness(1)
     }
+
+    /* Keyboard focus ring for the slider (arrow-key browsing) */
+    .proof-slider:focus {
+      outline: none
+    }
+
+    .proof-slider:focus-visible {
+      outline: 2px solid var(--accent-hi);
+      outline-offset: -2px
+    }
+
 
     .proof-slide-label {
       position: absolute;
@@ -2278,6 +2296,148 @@
       border-radius: 4px;
       backdrop-filter: blur(6px);
       z-index: 5
+    }
+
+    /* ===== LIGHTBOX ===== */
+    .lb-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(6, 6, 10, .88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s var(--ease)
+    }
+
+    .lb-overlay.lb-open {
+      opacity: 1;
+      pointer-events: all
+    }
+
+    .lb-wrap {
+      position: relative;
+      max-width: min(92vw, 1100px);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: scale(.88);
+      transition: transform .35s var(--ease)
+    }
+
+    .lb-overlay.lb-open .lb-wrap {
+      transform: scale(1)
+    }
+
+    .lb-img {
+      max-width: 100%;
+      max-height: min(88vh, 1400px);
+      object-fit: contain;
+      border-radius: var(--r-lg);
+      box-shadow: 0 32px 80px rgba(0,0,0,.7);
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+      touch-action: pan-y
+    }
+
+    .lb-caption {
+      margin-top: .75rem;
+      font-family: var(--font-body);
+      font-size: .85rem;
+      color: rgba(255,255,255,.65);
+      text-align: center;
+      max-width: 60ch;
+      line-height: 1.4
+    }
+
+    .lb-close {
+      position: fixed;
+      top: 18px;
+      right: 22px;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.18);
+      color: #fff;
+      font-size: 1.15rem;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: background .2s ease, transform .2s ease;
+      z-index: 10000
+    }
+
+    .lb-close:hover {
+      background: rgba(255,255,255,.22);
+      transform: scale(1.1) rotate(90deg)
+    }
+
+    .lb-prev,
+    .lb-next {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.18);
+      color: #fff;
+      font-size: 1rem;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: background .2s ease, transform .2s ease;
+      z-index: 10000
+    }
+
+    .lb-prev { left: 16px }
+    .lb-next { right: 16px }
+
+    .lb-prev:hover { background: rgba(255,255,255,.22); transform: translateY(-50%) scale(1.1) }
+    .lb-next:hover { background: rgba(255,255,255,.22); transform: translateY(-50%) scale(1.1) }
+
+    @media (max-width: 700px) {
+      .lb-prev,
+      .lb-next {
+        width: 38px;
+        height: 38px;
+        font-size: .85rem
+      }
+      .lb-prev { left: 8px }
+      .lb-next { right: 8px }
+    }
+
+
+
+    /* Experience slider + proof images — zoom cursor on hover */
+    .proof-slide img[data-lb],
+    .tl-proof img[data-lb] {
+      cursor: zoom-in
+    }
+
+    .proof-slide img[data-lb]:hover,
+    .tl-proof img[data-lb]:hover {
+      box-shadow: 0 0 0 2px var(--accent-hi)
+    }
+
+    /* ESC hint bar under the lightbox image */
+    .lb-hint {
+      margin-top: .6rem;
+      font-size: .78rem;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .02em;
+      text-align: center
     }
   </style>
 </head>
@@ -2895,6 +3055,111 @@
             </div>
           </article>
 
+          <!-- RentDora Flyer (Front & Back) -->
+          <article class="pcard reveal">
+            <div class="pcard-img" style="padding:0;overflow:hidden;background:#060608">
+              <div class="proof-slider" id="flyerSlider" style="border:none;margin:0;border-radius:0" tabindex="0"
+                data-lb-group="flyer" aria-roledescription="carousel"
+                aria-label="RentDora flyer, front and back. Use arrow keys to browse, click a slide to view it full size.">
+                <div class="proof-track-wrap">
+                  <div class="proof-track" id="flyerTrack">
+                    <div class="proof-slide">
+                      <img data-lb data-full="rentdora_flyer_front.jpg" src="rentdora_flyer_front.jpg"
+                        alt="RentDora Flyer – Front page" data-caption="RentDora Flyer — front page" loading="lazy">
+                      <span class="proof-slide-label">Front &mdash; click to enlarge</span>
+                    </div>
+                    <div class="proof-slide">
+                      <img data-lb data-full="rentdora_flyer_back.jpg" src="rentdora_flyer_back.jpg"
+                        alt="RentDora Flyer – Back page" data-caption="RentDora Flyer — back page" loading="lazy">
+                      <span class="proof-slide-label">Back &mdash; click to enlarge</span>
+                    </div>
+                  </div>
+                </div>
+                <span class="slider-count" id="flyerCount">1 / 2</span>
+                <button class="slider-arrow slider-prev" id="flyerPrev" type="button" aria-label="Previous slide"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="slider-arrow slider-next" id="flyerNext" type="button" aria-label="Next slide"><i class="fa-solid fa-chevron-right"></i></button>
+                <div class="slider-dots" id="flyerDots"></div>
+              </div>
+              <span class="pcard-type" style="position:absolute;top:8px;left:8px">Print &bull; Photoshop</span>
+              <span class="pcard-badge-design" style="position:absolute;top:8px;right:8px">Flyer</span>
+            </div>
+            <div class="pcard-body">
+              <h3>RentDora Flyer</h3>
+              <p>Double-sided promotional flyer for RentDora — a fashion rental marketplace for traditional Khmer
+                attire — designed with bold visuals and clear event messaging.</p>
+              <ul class="pcard-feats">
+                <li>Front &amp; back page layout</li>
+                <li>Brand-consistent identity</li>
+                <li>Eye-catching typography</li>
+                <li>Print-ready artwork</li>
+              </ul>
+              <div class="pcard-stack">
+                <code>Photoshop</code><code>Print Design</code><code>Branding</code>
+              </div>
+              <div class="pcard-links">
+                <a href="https://drive.google.com/file/d/1m26ncj65JCsmlSuPihSTGjWWztbjO26m/view?usp=sharing"
+                  target="_blank" rel="noopener" class="pcard-link-drive"><i class="fa-solid fa-eye"></i> View Flyer</a>
+              </div>
+            </div>
+          </article>
+
+          <!-- RentDora Board Design -->
+          <article class="pcard reveal">
+            <div class="pcard-img">
+              <img src="https://drive.google.com/thumbnail?id=12lOw-sAjM8kcUBg5mqi9j5GpJUVwBVTG&sz=w900"
+                alt="RentDora Board Design – branding board layout" loading="lazy">
+              <span class="pcard-type">Print &bull; Board</span>
+              <span class="pcard-badge-design">Board</span>
+            </div>
+            <div class="pcard-body">
+              <h3>RentDora Board Design</h3>
+              <p>Brand presentation board for RentDora, showcasing the visual identity system, colour palette, and
+                layout hierarchy for the traditional Khmer attire rental brand.</p>
+              <ul class="pcard-feats">
+                <li>Visual identity system</li>
+                <li>Colour &amp; typography</li>
+                <li>Layout hierarchy</li>
+                <li>Print-ready artwork</li>
+              </ul>
+              <div class="pcard-stack">
+                <code>Photoshop</code><code>Branding</code><code>Board Design</code>
+              </div>
+              <div class="pcard-links">
+                <a href="https://drive.google.com/file/d/12lOw-sAjM8kcUBg5mqi9j5GpJUVwBVTG/view?usp=sharing"
+                  target="_blank" rel="noopener" class="pcard-link-drive"><i class="fa-solid fa-eye"></i> View Board</a>
+              </div>
+            </div>
+          </article>
+
+          <!-- RentDora Moodboard -->
+          <article class="pcard reveal">
+            <div class="pcard-img">
+              <img src="https://drive.google.com/thumbnail?id=1qkVN7X_R1KUCiPywG8eVkScyrSPqbJin&sz=w900"
+                alt="RentDora Moodboard – brand mood and aesthetic direction" loading="lazy">
+              <span class="pcard-type">Design &bull; Moodboard</span>
+              <span class="pcard-badge-design">Moodboard</span>
+            </div>
+            <div class="pcard-body">
+              <h3>RentDora Moodboard</h3>
+              <p>Creative moodboard defining the aesthetic direction of RentDora — capturing the elegance of
+                traditional Khmer fashion through curated imagery, textures, and brand tones.</p>
+              <ul class="pcard-feats">
+                <li>Aesthetic direction</li>
+                <li>Curated imagery &amp; textures</li>
+                <li>Brand tone &amp; mood</li>
+                <li>Creative concept</li>
+              </ul>
+              <div class="pcard-stack">
+                <code>Photoshop</code><code>Moodboard</code><code>Brand Strategy</code>
+              </div>
+              <div class="pcard-links">
+                <a href="https://drive.google.com/file/d/1qkVN7X_R1KUCiPywG8eVkScyrSPqbJin/view?usp=drive_link"
+                  target="_blank" rel="noopener" class="pcard-link-drive"><i class="fa-solid fa-eye"></i> View
+                  Moodboard</a>
+              </div>
+            </div>
+          </article>
+
         </div>
       </div>
     </section>
@@ -2932,35 +3197,37 @@
                 </ul>
 
                 <!-- Swipeable poster gallery -->
-                <div class="proof-slider" id="footballSlider">
+                <div class="proof-slider" id="footballSlider" tabindex="0" data-lb-group="football"
+                  data-autoplay="4500" aria-roledescription="carousel"
+                  aria-label="Griffins FC match artwork. Use arrow keys to browse, click a slide to view it full size.">
                   <div class="proof-track-wrap">
                     <div class="proof-track" id="footballTrack">
                       <div class="proof-slide">
-                        <img src="football_poster_1.jpg"
+                        <img data-lb src="football_poster_1.jpg"
                           alt="Match-Day poster: Griffins FT vs Fuego Academy, 16 July 2023" loading="lazy">
                         <span class="proof-slide-label"><i class="fa-solid fa-image"
                             style="margin-right:.3rem"></i>Match Poster — Griffins vs Fuego Academy</span>
                       </div>
                       <div class="proof-slide">
-                        <img src="football_poster_2.jpg"
+                        <img data-lb src="football_poster_2.jpg"
                           alt="Match-Day poster: Griffins FT vs The Godzila, 13 August 2023" loading="lazy">
                         <span class="proof-slide-label"><i class="fa-solid fa-image"
                             style="margin-right:.3rem"></i>Match Poster — Griffins vs The Godzila</span>
                       </div>
                       <div class="proof-slide">
-                        <img src="football_poster_3.jpg" alt="Full-Time result graphic: The Ant King 1 – 4 Griffins"
+                        <img data-lb src="football_poster_3.jpg" alt="Full-Time result graphic: The Ant King 1 – 4 Griffins"
                           loading="lazy">
                         <span class="proof-slide-label"><i class="fa-solid fa-futbol"
                             style="margin-right:.3rem"></i>Full-Time Result Graphic</span>
                       </div>
                       <div class="proof-slide">
-                        <img src="football_poster_4.jpg"
+                        <img data-lb src="football_poster_4.jpg"
                           alt="Match-Day poster: Griffins FT vs Bek Nhers FT, 4 June 2023" loading="lazy">
                         <span class="proof-slide-label"><i class="fa-solid fa-image"
                             style="margin-right:.3rem"></i>Match Poster — Griffins vs Bek Nhers FT</span>
                       </div>
                       <div class="proof-slide">
-                        <img src="football_team_photo.jpg" alt="Griffins FT team photo on the pitch" loading="lazy">
+                        <img data-lb src="football_team_photo.jpg" alt="Griffins FT team photo on the pitch" loading="lazy">
                         <span class="proof-slide-label"><i class="fa-solid fa-camera"
                             style="margin-right:.3rem"></i>Griffins FT — Team Photo 2023</span>
                       </div>
@@ -2969,9 +3236,9 @@
                   <!-- Counter -->
                   <span class="slider-count" id="footballCount">1 / 5</span>
                   <!-- Arrows -->
-                  <button class="slider-arrow slider-prev" id="footballPrev" aria-label="Previous image"><i
+                  <button class="slider-arrow slider-prev" id="footballPrev" type="button" aria-label="Previous image"><i
                       class="fa-solid fa-chevron-left"></i></button>
-                  <button class="slider-arrow slider-next" id="footballNext" aria-label="Next image"><i
+                  <button class="slider-arrow slider-next" id="footballNext" type="button" aria-label="Next image"><i
                       class="fa-solid fa-chevron-right"></i></button>
                   <!-- Dots -->
                   <div class="slider-dots" id="footballDots"></div>
@@ -3030,7 +3297,7 @@
                 </ul>
                 <!-- Proof photo -->
                 <div class="tl-proof">
-                  <img src="ambassador_proof.jpg" alt="Student Ambassador at Limkokwing University education fair"
+                  <img data-lb src="ambassador_proof.jpg" alt="Student Ambassador at Limkokwing University education fair"
                     loading="lazy" onerror="this.parentElement.style.display='none'">
                   <span class="tl-proof-label"><i class="fa-solid fa-camera" style="margin-right:.3rem"></i>Student
                     Ambassador — Education Fair 2024</span>
@@ -3200,6 +3467,21 @@
     <i class="fa-solid fa-chevron-up"></i>
   </button>
 
+  <!-- LIGHTBOX (must be in the DOM before script.js runs) -->
+  <div class="lb-overlay" id="lb" role="dialog" aria-modal="true" aria-label="Image preview">
+    <button class="lb-close" id="lbClose" type="button" aria-label="Close preview"><i
+        class="fa-solid fa-xmark"></i></button>
+    <button class="lb-prev" id="lbPrev" type="button" aria-label="Previous image"><i
+        class="fa-solid fa-chevron-left"></i></button>
+    <button class="lb-next" id="lbNext" type="button" aria-label="Next image"><i
+        class="fa-solid fa-chevron-right"></i></button>
+    <div class="lb-wrap">
+      <img class="lb-img" id="lbImg" src="" alt="">
+      <p class="lb-caption" id="lbCaption"></p>
+      <p class="lb-hint" id="lbHint">Click outside or press ESC to close</p>
+    </div>
+  </div>
+
   <script src="script.js"></script>
   <script>
     // Contact form validation
@@ -3250,80 +3532,11 @@
     })();
   </script>
 
-  <!-- Football Poster Slider -->
-  <script>
-    (function () {
-      var track = document.getElementById('footballTrack');
-      var prevBtn = document.getElementById('footballPrev');
-      var nextBtn = document.getElementById('footballNext');
-      var dotsWrap = document.getElementById('footballDots');
-      var counter = document.getElementById('footballCount');
-      var slider = document.getElementById('footballSlider');
-      if (!track) return;
-
-      var slides = track.querySelectorAll('.proof-slide');
-      var total = slides.length;
-      var current = 0;
-      var dots = [];
-
-      // Build dots
-      slides.forEach(function (_, i) {
-        var d = document.createElement('button');
-        d.className = 'slider-dot' + (i === 0 ? ' active' : '');
-        d.setAttribute('aria-label', 'Go to slide ' + (i + 1));
-        d.addEventListener('click', function () { goTo(i); });
-        dotsWrap.appendChild(d);
-        dots.push(d);
-      });
-
-      function goTo(n) {
-        current = (n + total) % total;
-        track.style.transform = 'translateX(-' + (current * 100) + '%)';
-        counter.textContent = (current + 1) + ' / ' + total;
-        dots.forEach(function (d, i) {
-          d.classList.toggle('active', i === current);
-        });
-      }
-
-      prevBtn.addEventListener('click', function () { goTo(current - 1); });
-      nextBtn.addEventListener('click', function () { goTo(current + 1); });
-
-      // Keyboard navigation when slider is focused
-      slider.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowLeft') goTo(current - 1);
-        if (e.key === 'ArrowRight') goTo(current + 1);
-      });
-
-      // Touch / mouse drag swipe
-      var startX = 0, isDragging = false, threshold = 50;
-
-      function onDragStart(x) { startX = x; isDragging = true; }
-      function onDragEnd(x) {
-        if (!isDragging) return;
-        isDragging = false;
-        var delta = startX - x;
-        if (Math.abs(delta) > threshold) {
-          goTo(delta > 0 ? current + 1 : current - 1);
-        }
-      }
-
-      // Touch events
-      track.addEventListener('touchstart', function (e) { onDragStart(e.touches[0].clientX); }, { passive: true });
-      track.addEventListener('touchend', function (e) { onDragEnd(e.changedTouches[0].clientX); });
-
-      // Mouse drag events
-      track.addEventListener('mousedown', function (e) { onDragStart(e.clientX); e.preventDefault(); });
-      window.addEventListener('mouseup', function (e) { onDragEnd(e.clientX); });
-
-      // Auto-play every 4 s, pause on hover
-      var timer = setInterval(function () { goTo(current + 1); }, 4000);
-      slider.addEventListener('mouseenter', function () { clearInterval(timer); });
-      slider.addEventListener('mouseleave', function () {
-        clearInterval(timer);
-        timer = setInterval(function () { goTo(current + 1); }, 4000);
-      });
-    })();
-  </script>
 </body>
 
 </html>
+
+
+
+
+
